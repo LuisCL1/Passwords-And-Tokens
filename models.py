@@ -3,6 +3,8 @@ import datetime
 from config import BasicConfig
 from app import db,bcrypt
 
+
+
 class Usuario(db.Model):
     __tablename__="users"
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
@@ -22,7 +24,7 @@ class Usuario(db.Model):
     def encode_auth_token(self,user_id):
         try:
             payload={
-                'exp':datetime.datetime.utcnow()+datetime.datetime(days=0,minutes=10),
+                'exp':datetime.datetime.utcnow()+datetime.timedelta(days=0,hours=10),
                 'iat':datetime.datetime.utcnow(),
                 'sub':user_id
             }
@@ -48,3 +50,12 @@ class Usuario(db.Model):
             return "token expirado"
         except jwt.InvalidTokenError as e:
             return "token invalido"
+        
+class Imagenes(db.Model):
+    __tablename__='user_images'
+    id_image = db.Column(db.Integer,primary_key=True)
+    type = db.Column(db.String(128),nullable=False)
+    data=db.Column(db.LargeBinary,nullable=False)
+    rendered_data=db.Column(db.Text,nullable=False)
+    user_id=db.Column(db.Integer,db.ForeignKey('users.id'))
+    region = db.relationship('Usuario',backref='users')
