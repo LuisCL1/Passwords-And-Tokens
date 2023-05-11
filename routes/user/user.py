@@ -1,8 +1,8 @@
-from flask import Blueprint,request,jsonify
+from flask import Blueprint,request,jsonify,render_template
 from sqlalchemy import exc 
 from models import Usuario
 from app import db,bcrypt
-from auth import tokenCheck
+from auth import tokenCheck,verificarToken
 
 appuser=Blueprint('appuser',__name__,template_folder='templates')
 
@@ -60,4 +60,39 @@ def getUsers(usuario):
             response.append(usuarioData)
         return jsonify({'usuarios':response})  
     else: 
-        return jsonify({"message":"Acceso denegado"})  
+        return jsonify({"message":"Acceso denegado"}) 
+     
+@appuser.route('/main')
+def main():
+    return render_template('main.html')
+
+@appuser.route('/login/user',methods=["GET","POST"])
+def login_post():
+    if(request.method=="GET"):
+        token = request.args.get('token')
+        if token:
+            info = verificarToken(token)
+            if(info['status']!='fail'):
+                responseObject={
+                    'status':'success',
+                    'message':'valid token',
+                    'info':info
+                }
+                return jsonify(responseObject)
+        return render_template('login.html')
+    else:
+        email = request.json['email']
+        password=request.json['password']
+        usuario = Usuario(email=email,password=password)
+        userFilter=Usuario.query.filter_by(email=usuario.email).first()
+        if userFilter:
+            validation=bcrypt.check_password_hash(userFilter.password,password)
+            if validation:
+                auth_token = usuario.encode_auth_token(userFilter.id)
+                response= {
+                    'status':'success',
+                    'message':'Loggin exitoso',
+                    'auth_token':auth_token,
+                }
+                return jsonify(response)
+        return jsonify({"message":"Datos incorrectos"})

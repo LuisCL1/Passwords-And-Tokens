@@ -40,3 +40,14 @@ def tokenCheck(f):
             return jsonify({'message':'token invalido'})
         return f(info['data'],*args,**kwargs)
     return verificar
+
+def verificarToken(token):
+        if not token:  
+            return jsonify({'message':'token no encontrado'})
+        try:
+            info= obtenerInfo(token)
+            if info['status'] =='fail':
+                return jsonify({'message':'token invalido'})
+        except:
+            return jsonify({'message':'token invalido'})
+        return info
