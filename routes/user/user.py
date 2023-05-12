@@ -96,3 +96,32 @@ def login_post():
                 }
                 return jsonify(response)
         return jsonify({"message":"Datos incorrectos"})
+    
+@appuser.route('/signin',methods=["GET","POST"])
+def registrar():
+    if request.method=="GET":
+        return render_template('registrar.html')
+    else:
+        email = request.json["email"]
+        password=request.json["password"]
+        usuario = Usuario(email=email,password=password)
+        userExists=Usuario.query.filter_by(email=email).first()
+        if not userExists:
+            try:   
+                db.session.add(usuario)
+                db.session.commit()
+                responseObject={
+                    "status":"success",
+                    "message":"Registro Exitoso"
+                }
+            except Exception as e:
+                responseObject={
+                    "status":"Error",
+                    "message": e
+                }
+        else:
+            responseObject={
+                "status":"Error",
+                "message":"Ya existe el usuario"
+            }
+        return jsonify(responseObject)
